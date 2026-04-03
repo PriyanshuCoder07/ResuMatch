@@ -51,7 +51,7 @@ export default function App() {
     if (!resume.trim() || !jd.trim()) { setError("Please fill in both fields before analyzing."); return; }
     setError(""); setLoading(true); setResult(null);
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
+      const res = await fetch("https://resumatch-backend-api.onrender.com/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resume, jd }),
