@@ -37,10 +37,10 @@ def analyze():
         return jsonify({"error": "Both resume and job description are required."}), 400
 
     prompt = f"""
-You are an expert ATS analyzer and senior career coach.
+You are a professional ATS system and experienced technical recruiter.
 
-Analyze the resume against the job description below.
-Return ONLY a valid JSON object. No markdown, no code fences, no explanation.
+Analyze this resume against the job description carefully and realistically.
+Be honest but fair — like a real recruiter, not an AI trying to be harsh.
 
 Resume:
 {resume_text}
@@ -48,39 +48,51 @@ Resume:
 Job Description:
 {jd_text}
 
-Return exactly this JSON:
+Scoring guide:
+- 75-90: Resume clearly matches most JD requirements with relevant skills and experience
+- 55-74: Resume partially matches — has some relevant skills but missing key requirements  
+- 35-54: Resume has transferable skills but significant gaps for this specific role
+- 20-34: Resume has very little relevance to this specific JD
+- Give credit for transferable skills, related technologies, and relevant projects
+- A CS student with programming skills applying for a tech role should score at least 45-65
+- Do NOT penalize for being a student if the JD is entry level or accepts freshers
+- Base the score on actual keyword overlap, skill relevance, and experience fit
+
+Return ONLY this JSON, no explanation, no markdown:
 {{
-  "score": <realistic integer 0-100>,
-  "summary": "<2 sentence honest assessment>",
-  "matched": [<6-10 keywords found in both>],
-  "missing": [<6-10 important JD keywords missing from resume>],
+  "score": <balanced integer 0-100>,
+  "summary": "<3 sentence recruiter-style assessment — mention specific strengths, gaps, and realistic hiring outlook for this exact role>",
+  "matched": [<8-12 keywords/skills found in both resume and JD — include related technologies too>],
+  "missing": [<5-8 important JD keywords genuinely absent from resume>],
   "suggestions": [
     {{
-      "before": "<exact weak line from resume>",
-      "after": "<improved version with keywords and metrics>",
-      "reason": "<why this helps, max 10 words>"
+      "before": "<exact line from resume that could be stronger for THIS job>",
+      "after": "<rewritten version with JD keywords, action verbs, and measurable impact>",
+      "reason": "<specific reason tied to THIS JD, max 10 words>"
     }},
     {{
-      "before": "<weak line>",
-      "after": "<improved>",
+      "before": "<another line>",
+      "after": "<improved version>",
       "reason": "<reason>"
     }},
     {{
-      "before": "<weak line>",
-      "after": "<improved>",
+      "before": "<another line>",
+      "after": "<improved version>",
       "reason": "<reason>"
     }}
   ],
+  "what_to_add": [<4-5 specific things to ADD to resume to improve chances for THIS role>],
+  "what_to_remove": [<2-3 things in resume that are irrelevant for THIS specific role>],
   "report_card": {{
-    "skills": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
-    "experience": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
-    "education": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
-    "impact": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback on use of metrics/numbers>" }}
+    "skills": {{ "grade": "<A/B/C/D>", "comment": "<specific feedback on skill match for THIS role>" }},
+    "experience": {{ "grade": "<A/B/C/D>", "comment": "<honest comment — give credit for projects and internships>" }},
+    "education": {{ "grade": "<A/B/C/D>", "comment": "<comment on education relevance>" }},
+    "impact": {{ "grade": "<A/B/C/D>", "comment": "<comment on use of numbers and achievements>" }}
   }},
   "role_fits": [
-    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }},
-    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }},
-    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }}
+    {{ "role": "<job title this resume is genuinely suited for>", "match": <integer 65-92>, "reason": "<specific reason from resume>" }},
+    {{ "role": "<another suitable role>", "match": <integer 65-92>, "reason": "<reason>" }},
+    {{ "role": "<another suitable role>", "match": <integer 65-92>, "reason": "<reason>" }}
   ]
 }}
 """

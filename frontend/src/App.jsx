@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-
-const API = "https://resumatch-backend-api.onrender.com";
+const API = "http://localhost:5000";
 
 const s = {
   wrap: { minHeight: "100vh", background: "#0f0f0f", color: "#f0f0f0", fontFamily: "'Segoe UI', sans-serif" },
@@ -183,6 +182,20 @@ export default function App() {
                 </div>
               ))}
             </div>
+            <div style={s.card}>
+  <div style={s.sectionTitle}>What to add to your resume for this role</div>
+  {result.what_to_add?.map((item, i) => (
+    <div key={i} style={{ fontSize: "13px", color: "#4ade80", padding: "6px 0", borderBottom: "1px solid #1a1a1a", display: "flex", gap: "8px" }}>
+      <span>+</span><span>{item}</span>
+    </div>
+  ))}
+  <div style={{ ...s.sectionTitle, marginTop: "16px" }}>What to remove — irrelevant for this role</div>
+  {result.what_to_remove?.map((item, i) => (
+    <div key={i} style={{ fontSize: "13px", color: "#f87171", padding: "6px 0", borderBottom: "1px solid #1a1a1a", display: "flex", gap: "8px" }}>
+      <span>−</span><span>{item}</span>
+    </div>
+  ))}
+</div>
 
             <div style={s.card}>
               <div style={s.sectionTitle}>Rewrite Suggestions</div>
