@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-const API = "http://localhost:5000";
+const API = "https://resumatch-backend-api.onrender.com";
 
 const s = {
   wrap: { minHeight: "100vh", background: "#0f0f0f", color: "#f0f0f0", fontFamily: "'Segoe UI', sans-serif" },
