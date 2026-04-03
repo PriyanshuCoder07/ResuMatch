@@ -1,21 +1,40 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from groq import Groq
-import json, os
+import json, os, base64
 
 app = Flask(__name__)
 CORS(app)
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
+def extract_text_from_pdf(pdf_bytes):
+    try:
+        import pdfplumber, io
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            return "\n".join(page.extract_text() or "" for page in pdf.pages)
+    except:
+        return ""
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data = request.json
-    resume_text = data.get("resume", "")
-    jd_text = data.get("jd", "")
+    resume_text = ""
+    jd_text = ""
+
+    if request.content_type and "multipart" in request.content_type:
+        jd_text = request.form.get("jd", "")
+        file = request.files.get("resume_pdf")
+        if file:
+            resume_text = extract_text_from_pdf(file.read())
+        else:
+            resume_text = request.form.get("resume", "")
+    else:
+        data = request.json
+        resume_text = data.get("resume", "")
+        jd_text = data.get("jd", "")
 
     if not resume_text or not jd_text:
-        return jsonify({"error": "Both fields are required."}), 400
+        return jsonify({"error": "Both resume and job description are required."}), 400
 
     prompt = f"""
 You are an expert ATS analyzer and senior career coach.
@@ -29,36 +48,41 @@ Resume:
 Job Description:
 {jd_text}
 
-Return exactly this JSON structure:
+Return exactly this JSON:
 {{
-  "score": <realistic integer 0-100 representing ATS match>,
-  "summary": "<2 sentence honest assessment of this candidate for this role>",
-  "matched": [<list of 6-10 specific skills/keywords found in both>],
-  "missing": [<list of 6-10 important JD keywords completely absent from resume>],
+  "score": <realistic integer 0-100>,
+  "summary": "<2 sentence honest assessment>",
+  "matched": [<6-10 keywords found in both>],
+  "missing": [<6-10 important JD keywords missing from resume>],
   "suggestions": [
     {{
-      "before": "<exact weak or vague line from the resume>",
-      "after": "<rewritten version with keywords, metrics, and impact>",
-      "reason": "<specific reason this change helps, max 10 words>"
+      "before": "<exact weak line from resume>",
+      "after": "<improved version with keywords and metrics>",
+      "reason": "<why this helps, max 10 words>"
     }},
     {{
-      "before": "<another weak line>",
-      "after": "<improved version>",
+      "before": "<weak line>",
+      "after": "<improved>",
       "reason": "<reason>"
     }},
     {{
-      "before": "<another weak line>",
-      "after": "<improved version>",
+      "before": "<weak line>",
+      "after": "<improved>",
       "reason": "<reason>"
     }}
+  ],
+  "report_card": {{
+    "skills": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
+    "experience": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
+    "education": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback>" }},
+    "impact": {{ "grade": "<A/B/C/D>", "comment": "<one sentence feedback on use of metrics/numbers>" }}
+  }},
+  "role_fits": [
+    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }},
+    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }},
+    {{ "role": "<job title>", "match": <integer 60-95>, "reason": "<one sentence why>" }}
   ]
 }}
-
-Rules:
-- score must be honest and realistic
-- suggestions must use actual lines from the provided resume
-- after lines must naturally include missing keywords
-- summary must be direct and useful
 """
 
     try:
